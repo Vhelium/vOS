@@ -7,7 +7,7 @@ void foo()
     writer.color_code = vga_get_color_code((char) LightGreen, (char) Black);
     writer.buffer = (struct Buffer*) 0xb8000;
 
-    vga_writer_write_str(&writer, "Hello World");
+    vga_writer_write_str(&writer, "Hello World!");
 }
 
 void c_main(void)
