@@ -41,7 +41,7 @@ $(kernel): $(assembly_object_files) $(linker_script) $(c_object_files)
 #	@gcc -c $< -o $@
 build/target/$(target)/%.o: src/%.c
 	@mkdir -p $(shell dirname $@)
-	@gcc -c $< -o $@
+	@gcc -Wall -g -c $< -o $@
 
 # compile assembly files
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm

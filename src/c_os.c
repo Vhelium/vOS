@@ -1,15 +1,5 @@
 #include "vga_buffer.h"
 
-void foo()
-{
-    struct Writer writer;
-    writer.column_position = 0;
-    writer.color_code = vga_get_color_code((char) LightGreen, (char) Black);
-    writer.buffer = (struct Buffer*) 0xb8000;
-
-    vga_writer_write_str(&writer, "Hello World!");
-}
-
 void c_main(void)
 {
 	/*
@@ -33,7 +23,9 @@ void c_main(void)
     }
     */
 
-    foo();
+    printf("Kappa\nKeepo");
+    cls();
+    printf("much wow");
 
     for(;;) {}
 }
