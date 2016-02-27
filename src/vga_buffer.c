@@ -37,7 +37,7 @@ struct Buffer *vga_writer_get_buffer(struct Writer *writer)
     return writer->buffer;
 }
 
-void vga_writer_write_str(struct Writer *writer, char *str)
+void vga_writer_write_str(struct Writer *writer, const char *str)
 {
     while (*str) {
         vga_writer_write_byte(writer, *str++);
@@ -50,6 +50,15 @@ void vga_writer_write_int(struct Writer *writer, int i)
         vga_writer_write_int(writer, i / 10);
     }
     vga_writer_write_byte(writer, (char) (i%10 + 48));
+}
+
+void vga_writer_write_hex(struct Writer *writer, int h)
+{
+    if (h >= 16) {
+        vga_writer_write_hex(writer, h / 16);
+    }
+    char digit = h % 16;
+    vga_writer_write_byte(writer, digit < 10 ? (digit+ 48) : (digit + 55));
 }
 
 void vga_writer_new_line(struct Writer *writer)
