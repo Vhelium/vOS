@@ -58,6 +58,8 @@ struct Writer *vga_writer_get_instance();
 
 #define printf(str) vga_writer_write_str(WRITER, str)
 
+#define printint(i) vga_writer_write_int(WRITER, i)
+
 #define cls() vga_writer_clear_screen(WRITER)
 
 #endif

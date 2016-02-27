@@ -7,6 +7,8 @@ start:
     ; set stack pointer
     mov esp, stack_top
 
+    mov edi, ebx    ; move Multiboot info pointer to edi
+
     ; perform checks
     call check_multiboot
     call check_cpuid
@@ -178,7 +180,7 @@ p3_table:
 p2_table:
     resb 4096
 stack_bottom:
-    resb 64
+    resb 4096
 stack_top:
 
 section .rodata

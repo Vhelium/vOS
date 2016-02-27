@@ -1,31 +1,28 @@
+#include <stdint.h>
+#include "vlib.h"
 #include "vga_buffer.h"
+#include "multiboot2-elf64/multiboot2_elf64.h"
 
-void c_main(void)
+void c_main(int32_t multiboot_information_address)
 {
-	/*
-    int i;
-    char hello[] = "Hello World!";
-	char color_byte = 0x9f; // white foreground, blue background
-
-    // set up colored string
-	char hello_colored[24];
-    for (i = 0; i < 12; i++) {
-        char *char_byte = hello + i;
-        hello_colored[i*2] = *char_byte;
-        hello_colored[i*2+1] = color_byte;
-    }
-
-    // write to buffer
-    char *buffer_ptr = (char *)(0xb8000 + 1988);
-    for (i = 0; i < 12; i++) {
-        *buffer_ptr++ = hello_colored[i*2];
-        *buffer_ptr++ = hello_colored[i*2+1];
-    }
-    */
-
     printf("Kappa\nKeepo");
+
     cls();
-    printf("much wow");
+
+    printf("Adress: ");
+    printint((int) multiboot_information_address);
+    printf("\n");
+
+    struct BootInformation *bi = mb_load(multiboot_information_address);
+    printf("BootInformation.totalSize: ");
+    printint(bi->total_size);
+    printf("\n");
+
+    int iv = mb_has_valid_end_tag(bi);
+
+    printf("\nis end tag valid: ");
+    vga_writer_write_int(WRITER, iv);
+    printf("\n");
 
     for(;;) {}
 }
