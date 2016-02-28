@@ -14,7 +14,7 @@ struct ElfSection {
     int32_t info;
     int64_t addralign;
     int64_t entry_size;
-};
+} __attribute__((packed));
 
 struct ElfSectionsTag {
     int32_t typ;
@@ -23,7 +23,7 @@ struct ElfSectionsTag {
     int32_t entry_size;
     int32_t shndx; // string table
     struct ElfSection first_section;
-};
+} __attribute__((packed));
 
 struct ElfSectionIter {
     struct ElfSection *current_section;

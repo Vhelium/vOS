@@ -8,7 +8,7 @@ struct MemoryArea {
    int64_t length;
    int32_t typ;
    int32_t reserved;
-};
+} __attribute__((packed));
 
 struct MemoryMapTag {
     int32_t typ;
@@ -16,7 +16,7 @@ struct MemoryMapTag {
     int32_t entry_size;
     int32_t entry_version;
     struct MemoryArea first_area;
-};
+} __attribute__((packed));
 
 struct MemoryAreaIter {
     struct MemoryArea *current_area;

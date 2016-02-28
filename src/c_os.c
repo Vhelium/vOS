@@ -36,10 +36,10 @@ void c_main(int32_t multiboot_information_address)
         }
     } while ((valid = mb_get_next_memory_area(&mmIter)) != -1);
 
-    printf("\nkernel sections:\n");
     struct ElfSectionsTag *est = mb_get_elf_sections_tag(bi);
     struct ElfSectionIter esIter = mb_get_elf_sections(est);
 
+    printf("kernel sections:\n");
     while(esIter.remaining_sections > 0) {
         enum ElfSectionType typ = esIter.current_section->typ;
         if (typ != Unused) {
