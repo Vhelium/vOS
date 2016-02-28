@@ -3,6 +3,7 @@
 #include "vga_buffer.h"
 #include "multiboot2-elf64/multiboot2_elf64.h"
 #include "multiboot2-elf64/memory_map.h"
+#include "multiboot2-elf64/elf_sections.h"
 
 void c_main(int32_t multiboot_information_address)
 {
@@ -19,21 +20,43 @@ void c_main(int32_t multiboot_information_address)
 
     printf("memory areas:\n");
     struct MemoryMapTag *mmt = mb_get_memory_map_tag(bi);
-    struct MemoryAreaIter iter = mb_get_memory_areas(mmt);
+    struct MemoryAreaIter mmIter = mb_get_memory_areas(mmt);
 
-    int valid = iter.current_area->typ == 1;
+    int valid = mmIter.current_area->typ == 1;
     do {
         if (valid) {
             printf("    start: ");
-            printhex(iter.current_area->base_addr);
+            printhex(mmIter.current_area->base_addr);
             printf(", length: ");
-            printhex(iter.current_area->length);
+            printhex(mmIter.current_area->length);
             printf("\n");
         }
         else {
             // printf("invalid area\n");
         }
-    } while ((valid = mb_get_next_memory_area(&iter)) != -1);
+    } while ((valid = mb_get_next_memory_area(&mmIter)) != -1);
+
+    printf("\nkernel sections:\n");
+    struct ElfSectionsTag *est = mb_get_elf_sections_tag(bi);
+    struct ElfSectionIter esIter = mb_get_elf_sections(est);
+
+    while(esIter.remaining_sections > 0) {
+        enum ElfSectionType typ = esIter.current_section->typ;
+        if (typ != Unused) {
+            printf("    addr: ");
+            printlonghex(esIter.current_section->addr);
+            printf(", size: ");
+            printlonghex(esIter.current_section->size);
+            printf(", flags: ");
+            printlonghex(esIter.current_section->flags);
+            printf("\n");
+        }
+        else {
+            // printf("unused area\n");
+        }
+
+        mb_get_next_elf_section(&esIter);
+    }
 
     for(;;) {}
 }

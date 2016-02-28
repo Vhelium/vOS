@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "vga_buffer.h"
 #include "vlib.h"
 
@@ -56,6 +57,15 @@ void vga_writer_write_hex(struct Writer *writer, int h)
 {
     if (h >= 16) {
         vga_writer_write_hex(writer, h / 16);
+    }
+    char digit = h % 16;
+    vga_writer_write_byte(writer, digit < 10 ? (digit+ 48) : (digit + 55));
+}
+
+void vga_writer_write_long_hex(struct Writer *writer, int64_t h)
+{
+    if (h >= 16) {
+        vga_writer_write_long_hex(writer, h / 16);
     }
     char digit = h % 16;
     vga_writer_write_byte(writer, digit < 10 ? (digit+ 48) : (digit + 55));

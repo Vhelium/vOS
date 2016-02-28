@@ -21,4 +21,6 @@ int mb_has_valid_end_tag(struct BootInformation *bi);
 
 struct MemoryMapTag *mb_get_memory_map_tag(struct BootInformation *bi);
 
+struct ElfSectionsTag *mb_get_elf_sections_tag(struct BootInformation *bi);
+
 #endif

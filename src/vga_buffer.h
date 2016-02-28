@@ -1,6 +1,7 @@
 #ifndef VGA_BUFFER_H
 #define VGA_BUFFER_H
 
+#include <stdint.h>
 #include "vlib.h"
 
 enum Color {
@@ -52,6 +53,8 @@ void vga_writer_write_int(struct Writer *writer, int i);
 
 void vga_writer_write_hex(struct Writer *writer, int h);
 
+void vga_writer_write_long_hex(struct Writer *writer, int64_t h);
+
 void vga_writer_clear_screen(struct Writer *writer);
 
 struct Writer *vga_writer_get_instance();
@@ -63,6 +66,8 @@ struct Writer *vga_writer_get_instance();
 #define printint(i) vga_writer_write_int(WRITER, i)
 
 #define printhex(h) vga_writer_write_hex(WRITER, h)
+
+#define printlonghex(h) vga_writer_write_long_hex(WRITER, h)
 
 #define cls() vga_writer_clear_screen(WRITER)
 

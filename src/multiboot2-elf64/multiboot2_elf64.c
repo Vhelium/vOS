@@ -3,6 +3,7 @@
 #include "../vga_buffer.h"
 #include "multiboot2_elf64.h"
 #include "memory_map.h"
+#include "elf_sections.h"
 
 struct BootInformation *mb_load(int32_t adress)
 {
@@ -40,4 +41,11 @@ struct MemoryMapTag *mb_get_memory_map_tag(struct BootInformation *bi)
 {
     struct MemoryMapTag *mmt = (struct MemoryMapTag *) mb_get_tag(bi, 6);
     return mmt;
+
+}
+
+struct ElfSectionsTag *mb_get_elf_sections_tag(struct BootInformation *bi)
+{
+    struct ElfSectionsTag *est = (struct ElfSectionsTag *) mb_get_tag(bi, 9);
+    return est;
 }
