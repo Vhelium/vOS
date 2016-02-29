@@ -61,7 +61,7 @@ struct Writer *vga_writer_get_instance();
 
 #define WRITER vga_writer_get_instance()
 
-#define printf(str) vga_writer_write_str(WRITER, str)
+#define printstr(str) vga_writer_write_str(WRITER, str)
 
 #define printint(i) vga_writer_write_int(WRITER, i)
 

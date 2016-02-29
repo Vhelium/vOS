@@ -3,7 +3,7 @@
 
 typedef unsigned int size_t;
 
-#include "vga_buffer.h"
+#include "vio.h"
 
 void __assert_fail(const char *__assertion, const char *__file,
 	unsigned int __line, const char *__function);

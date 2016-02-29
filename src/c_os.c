@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "vlib.h"
 #include "vga_buffer.h"
+#include "vio.h"
 #include "multiboot2-elf64/multiboot2_elf64.h"
 #include "multiboot2-elf64/memory_map.h"
 #include "multiboot2-elf64/elf_sections.h"
@@ -103,6 +104,8 @@ void c_main(int32_t multiboot_information_address)
     printf("allocated frames: ");
     printint(f.number);
     printf("\n");
+
+    printf("g%d m%d", 8, 8);
 
     for(;;) {}
 }
