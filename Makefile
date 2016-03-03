@@ -14,15 +14,21 @@ assembly_object_files := $(patsubst src/arch/$(arch)/%.asm, \
 mb_source_files := $(wildcard src/multiboot2-elf64/*.c)
 mb_object_files := $(patsubst src/multiboot2-elf64/%.c, \
 	build/target/$(target)/multiboot2-elf64/%.o, $(mb_source_files))
-mem_source_files := $(wildcard src/memory/*.c)
-mem_object_files := $(patsubst src/memory/%.c, \
-	build/target/$(target)/memory/%.o, $(mem_source_files))
+
+mem_source_files := $(shell find src/memory -name '*.c')
+mem_object_files := $(addprefix build/target/$(target)/memory/, $(mem_source_files:src/memory/%.c=%.o))
+
+#mem_source_files := $(wildcard src/memory/*.c)
+#mem_object_files := $(patsubst src/memory/%.c, \
+#	build/target/$(target)/memory/%.o, $(mem_source_files))
 
 .PHONY: all clean run iso
 
 all: $(kernel)
 
 clean:
+	@echo $(mem_object_files)
+	@echo $(mem_source_files)
 	@rm -r build
 
 run: $(iso)
@@ -36,6 +42,7 @@ $(iso): $(kernel) $(grub_cfg)
 	@cp $(grub_cfg) build/isofiles/boot/grub
 	@grub-mkrescue -d /usr/lib/grub/i386-pc -o $(iso) build/isofiles 2> /dev/null
 	@rm -r build/isofiles
+
 
 $(kernel): $(assembly_object_files) $(linker_script) $(c_object_files) $(mb_object_files) $(mem_object_files)
 	@ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files) $(mb_object_files) $(mem_object_files)
@@ -56,6 +63,7 @@ build/target/$(target)/multiboot2-elf64/%.o: src/multiboot2-elf64/%.c
 	@gcc -Wall -g -c $< -o $@
 	
 # compile memory files
-build/target/$(target)/memory/%.o: src/memory/%.c
+#build/target/$(target)/memory/%.o: src/memory/%.c
+$(mem_object_files): $(mem_source_files)
 	@mkdir -p $(shell dirname $@)
 	@gcc -Wall -g -c $< -o $@
