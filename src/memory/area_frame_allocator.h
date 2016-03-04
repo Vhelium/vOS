@@ -23,4 +23,6 @@ struct AreaFrameAllocator fa_create(uint64_t kernel_start, uint64_t kernel_end,
  * returns 0 if no free frame is available */
 int fa_allocate_frame(struct AreaFrameAllocator *self, struct Frame *frame);
 
+void fa_deallocate_frame(struct AreaFrameAllocator *self, struct Frame *frame);
+
 #endif

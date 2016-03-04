@@ -5,9 +5,10 @@
 #include "memory_map.h"
 #include "elf_sections.h"
 
-struct BootInformation *mb_load(int32_t adress)
+struct BootInformation *mb_load(uint32_t address)
 {
-    struct BootInformation *multiboot = (struct BootInformation *)adress;
+    uint64_t addressx64 = address;
+    struct BootInformation *multiboot = (struct BootInformation *)addressx64;
     assert(mb_has_valid_end_tag(multiboot));
     return multiboot;
 }

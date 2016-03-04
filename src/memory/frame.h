@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 typedef uint64_t PhysicalAdress;
-typedef uint64_t VirtuallAdress;
+typedef uint64_t VirtualAdress;
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE 4096U
 
 struct Frame {
     uint32_t number;

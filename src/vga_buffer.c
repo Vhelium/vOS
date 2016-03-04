@@ -45,7 +45,7 @@ void vga_writer_write_str(struct Writer *writer, const char *str)
     }
 }
 
-void vga_writer_write_int(struct Writer *writer, int i)
+void vga_writer_write_int(struct Writer *writer, uint32_t i)
 {
     if (i >= 10) {
         vga_writer_write_int(writer, i / 10);
@@ -53,7 +53,15 @@ void vga_writer_write_int(struct Writer *writer, int i)
     vga_writer_write_byte(writer, (char) (i%10 + 48));
 }
 
-void vga_writer_write_hex(struct Writer *writer, int h)
+void vga_writer_write_long_int(struct Writer *writer, uint64_t i)
+{
+    if (i >= 10) {
+        vga_writer_write_long_int(writer, i / 10);
+    }
+    vga_writer_write_byte(writer, (char) (i%10 + 48));
+}
+
+void vga_writer_write_hex(struct Writer *writer, uint32_t h)
 {
     if (h >= 16) {
         vga_writer_write_hex(writer, h / 16);
@@ -62,7 +70,7 @@ void vga_writer_write_hex(struct Writer *writer, int h)
     vga_writer_write_byte(writer, digit < 10 ? (digit+ 48) : (digit + 55));
 }
 
-void vga_writer_write_long_hex(struct Writer *writer, int64_t h)
+void vga_writer_write_long_hex(struct Writer *writer, uint64_t h)
 {
     if (h >= 16) {
         vga_writer_write_long_hex(writer, h / 16);

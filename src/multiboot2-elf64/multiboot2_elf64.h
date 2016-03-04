@@ -4,18 +4,18 @@
 #include <stdint.h>
 
 struct Tag {
-    int32_t typ;
-    int32_t size;
+    uint32_t typ;
+    uint32_t size;
     // tag specific fields
 };
 
 struct BootInformation {
-    int32_t total_size;
-    int32_t _reserved;
+    uint32_t total_size;
+    uint32_t _reserved;
     struct Tag first_tag;
 };
 
-struct BootInformation *mb_load(int32_t adress);
+struct BootInformation *mb_load(uint32_t adress);
 
 int mb_has_valid_end_tag(struct BootInformation *bi);
 

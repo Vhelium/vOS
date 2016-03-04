@@ -5,32 +5,33 @@
 
 /* if Entry is == 0, the Entry counts as unused */
 
-typedef uint64_t Entry;
-typedef uint64_t EntryFlags;
+typedef uint64_t PageEntry;
+typedef uint64_t PageEntryFlag;
+typedef uint64_t PageEntryFlags;
 
-enum EntryFlag {
-    PRESENT = 1 << 0,
-    WRITABLE = 1 << 1,
-    USER_ACCESSIBLE = 1 << 2,
-    WRITE_THROUGH = 1 << 3,
-    NO_CACHE = 1 << 4,
-    ACCESSED = 1 << 5,
-    DIRTY = 1 << 6,
-    HUGE_PAGE = 1 << 7,
-    GLOBAL = 1 << 8,
-    NO_EXECUTE = 1 << 63
-}
+extern const PageEntryFlag EF_PRESENT;
+extern const PageEntryFlag EF_WRITABLE;
+extern const PageEntryFlag EF_USER_ACCESSIBLE;
+extern const PageEntryFlag EF_WRITE_THROUGH;
+extern const PageEntryFlag EF_NO_CACHE;
+extern const PageEntryFlag EF_ACCESSED;
+extern const PageEntryFlag EF_DIRTY;
+extern const PageEntryFlag EF_HUGE_PAGE;
+extern const PageEntryFlag EF_GLOBAL;
+extern const PageEntryFlag EF_NO_EXECUTE;
 
-int pg_entry_is_unused(Entry *entry);
+int pg_entry_is_unused(PageEntry *entry);
 
-void pg_entry_set_unused(Entry *entry);
+void pg_entry_set_unused(PageEntry *entry);
 
-int pg_entry_has_flags(Entry *self, EntryFlags flags);
+int pg_entry_has_flags(PageEntry *self, PageEntryFlags flags);
 
-int pg_entry_set_flags(Entry *self, EntryFlags flags);
+void pg_entry_set_flags(PageEntry *self, PageEntryFlags flags);
+
+void pg_entry_set(PageEntry *self, struct Frame *frame, PageEntryFlags flags);
 
 /* returns 1 if a frame was found and written to `frame`
  * returns 0 if no such frame was found */
-int pg_entry_pointed_frame(Entry *self, Frame *frame);
+int pg_entry_pointed_frame(PageEntry *self, struct Frame *frame);
 
 #endif

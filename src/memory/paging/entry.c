@@ -1,30 +1,49 @@
+#include "../../vlib.h"
+#include "entry.h"
 #include "../frame.h"
 #include "paging.h"
 
-int pg_entry_is_unused(Entry *entry)
+const PageEntryFlag EF_PRESENT = 1 << 0;
+const PageEntryFlag EF_WRITABLE = 1 << 1;
+const PageEntryFlag EF_USER_ACCESSIBLE = 1 << 2;
+const PageEntryFlag EF_WRITE_THROUGH = 1 << 3;
+const PageEntryFlag EF_NO_CACHE = 1 << 4;
+const PageEntryFlag EF_ACCESSED = 1 << 5;
+const PageEntryFlag EF_DIRTY = 1 << 6;
+const PageEntryFlag EF_HUGE_PAGE = 1 << 7;
+const PageEntryFlag EF_GLOBAL = 1 << 8;
+const PageEntryFlag EF_NO_EXECUTE = 0x80000000;
+
+int pg_entry_is_unused(PageEntry *entry)
 {
     return *entry == 0;
 }
 
-void pg_entry_set_unused(Entry *entry)
+void pg_entry_set_unused(PageEntry *entry)
 {
     *entry = 0;
 }
 
-int pg_entry_has_flags(Entry *self, EntryFlags flags)
+int pg_entry_has_flags(PageEntry *self, PageEntryFlags flags)
 {
-    return *self & flags == flags;
+    return (*self & flags) == flags;
 }
 
-int pg_entry_set_flags(Entry *self, EntryFlags flags)
+void pg_entry_set_flags(PageEntry *self, PageEntryFlags flags)
 {
     *self = *self | flags;
 }
 
-int pg_entry_pointed_frame(Entry *self, struct Frame *frame)
+void pg_entry_set(PageEntry *self, struct Frame *frame, PageEntryFlags flags)
 {
-    if (pg_entry_has_flags((enum EntryFlags) PRESENT)) {
-        *frame = frame_containing_address(*self & 0x000fffff_fffff000);
+    assert((frame_start_adress(frame) & (~0x000ffffffffff000U)) == 0);
+    *self = frame_start_adress(frame) | flags;
+}
+
+int pg_entry_pointed_frame(PageEntry *self, struct Frame *frame)
+{
+    if (pg_entry_has_flags(self, EF_PRESENT)) {
+        *frame = frame_containing_address(*self & 0x000ffffffffff000U);
         return 1;
     }
     else {

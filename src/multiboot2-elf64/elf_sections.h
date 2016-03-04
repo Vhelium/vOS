@@ -4,31 +4,31 @@
 #include <stdint.h>
 
 struct ElfSection {
-    int32_t name;
-    int32_t typ;
-    int64_t flags;
-    int64_t addr;
-    int64_t offset;
-    int64_t size;
-    int32_t link;
-    int32_t info;
-    int64_t addralign;
-    int64_t entry_size;
+    uint32_t name;
+    uint32_t typ;
+    uint64_t flags;
+    uint64_t addr;
+    uint64_t offset;
+    uint64_t size;
+    uint32_t link;
+    uint32_t info;
+    uint64_t addralign;
+    uint64_t entry_size;
 } __attribute__((packed));
 
 struct ElfSectionsTag {
-    int32_t typ;
-    int32_t size;
-    int32_t number_of_sections;
-    int32_t entry_size;
-    int32_t shndx; // string table
+    uint32_t typ;
+    uint32_t size;
+    uint32_t number_of_sections;
+    uint32_t entry_size;
+    uint32_t shndx; // string table
     struct ElfSection first_section;
 } __attribute__((packed));
 
 struct ElfSectionIter {
     struct ElfSection *current_section;
-    int32_t remaining_sections;
-    int32_t entry_size;
+    uint32_t remaining_sections;
+    uint32_t entry_size;
 };
 
 enum ElfSectionType {

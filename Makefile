@@ -15,20 +15,22 @@ mb_source_files := $(wildcard src/multiboot2-elf64/*.c)
 mb_object_files := $(patsubst src/multiboot2-elf64/%.c, \
 	build/target/$(target)/multiboot2-elf64/%.o, $(mb_source_files))
 
-mem_source_files := $(shell find src/memory -name '*.c')
-mem_object_files := $(addprefix build/target/$(target)/memory/, $(mem_source_files:src/memory/%.c=%.o))
+#mem_source_files := $(shell find src/memory -name '*.c')
+#mem_object_files := $(addprefix build/target/$(target)/memory/, $(mem_source_files:src/memory/%.c=%.o))
 
-#mem_source_files := $(wildcard src/memory/*.c)
-#mem_object_files := $(patsubst src/memory/%.c, \
-#	build/target/$(target)/memory/%.o, $(mem_source_files))
+mem_source_files := $(wildcard src/memory/*.c)
+mem_object_files := $(patsubst src/memory/%.c, \
+	build/target/$(target)/memory/%.o, $(mem_source_files))
+
+mem_source_files2 := $(wildcard src/memory/paging/*.c)
+mem_object_files2 := $(patsubst src/memory/paging/%.c, \
+	build/target/$(target)/memory/paging/%.o, $(mem_source_files2))
 
 .PHONY: all clean run iso
 
 all: $(kernel)
 
 clean:
-	@echo $(mem_object_files)
-	@echo $(mem_source_files)
 	@rm -r build
 
 run: $(iso)
@@ -44,8 +46,8 @@ $(iso): $(kernel) $(grub_cfg)
 	@rm -r build/isofiles
 
 
-$(kernel): $(assembly_object_files) $(linker_script) $(c_object_files) $(mb_object_files) $(mem_object_files)
-	@ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files) $(mb_object_files) $(mem_object_files)
+$(kernel): $(assembly_object_files) $(linker_script) $(c_object_files) $(mb_object_files) $(mem_object_files) $(mem_object_files2)
+	@ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files) $(c_object_files) $(mb_object_files) $(mem_object_files) $(mem_object_files2)
 
 # compile C files
 build/target/$(target)/%.o: src/%.c
@@ -63,7 +65,11 @@ build/target/$(target)/multiboot2-elf64/%.o: src/multiboot2-elf64/%.c
 	@gcc -Wall -g -c $< -o $@
 	
 # compile memory files
-#build/target/$(target)/memory/%.o: src/memory/%.c
-$(mem_object_files): $(mem_source_files)
+#$(mem_object_files): $(mem_source_files)
+build/target/$(target)/memory/%.o: src/memory/%.c
+	@mkdir -p $(shell dirname $@)
+	@gcc -Wall -g -c $< -o $@
+
+build/target/$(target)/memory/paging/%.o: src/memory/paging/%.c
 	@mkdir -p $(shell dirname $@)
 	@gcc -Wall -g -c $< -o $@

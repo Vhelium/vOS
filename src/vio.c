@@ -13,13 +13,18 @@ void v_printf(const char *str, ... )
         if (*str == '%') {
             // format
             char format  = *(++str);
+            //char mod = *(++str);
             if (format == 'd') {
                 // print int
-                printint(va_arg(a_list, int));
+                printint(va_arg(a_list, uint32_t));
+            }
+            else if (format == 'D') {
+                // print long
+                printlongint(va_arg(a_list, uint64_t));
             }
             else if (format == 'x') {
                 // print int as hex
-                printhex(va_arg(a_list, int));
+                printhex(va_arg(a_list, uint32_t));
             }
             else if (format == 's') {
                 // print string
@@ -27,7 +32,7 @@ void v_printf(const char *str, ... )
             }
             else if (format == 'l') {
                 // print long
-                printlonghex(va_arg(a_list, long));
+                printlonghex(va_arg(a_list, uint64_t));
             }
             str++;
         }

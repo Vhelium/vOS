@@ -4,17 +4,17 @@
 #include <stdint.h>
 
 struct MemoryArea {
-   int64_t base_addr;
-   int64_t length;
-   int32_t typ;
-   int32_t reserved;
+   uint64_t base_addr;
+   uint64_t length;
+   uint32_t typ;
+   uint32_t reserved;
 } __attribute__((packed));
 
 struct MemoryMapTag {
-    int32_t typ;
-    int32_t size;
-    int32_t entry_size;
-    int32_t entry_version;
+    uint32_t typ;
+    uint32_t size;
+    uint32_t entry_size;
+    uint32_t entry_version;
     struct MemoryArea first_area;
 } __attribute__((packed));
 

@@ -7,8 +7,9 @@
 #include "multiboot2-elf64/elf_sections.h"
 #include "memory/frame.h"
 #include "memory/area_frame_allocator.h"
+#include "memory/paging/paging.h"
 
-void c_main(int32_t multiboot_information_address)
+void c_main(uint32_t multiboot_information_address)
 {
     printf("Kappa\nKeepo");
 
@@ -89,24 +90,52 @@ void c_main(int32_t multiboot_information_address)
 
     printf("\n");
     
-
-    // TODO: test area frame allocator
     struct AreaFrameAllocator frame_allocator = fa_create(kernel_start, kernel_end,
             multiboot_start, multiboot_end, mb_get_memory_areas(mmt));
 
+    /*
+    // allocation test
     struct Frame f;
-    while(fa_allocate_frame(&frame_allocator, &f)) {
-        // keep allocating frames
-        /* printint(f.number);
-        printf(" ");
-        i++; */
-    }
+    while(fa_allocate_frame(&frame_allocator, &f)) { }
     printf("allocated frames: ");
     printint(f.number);
-    printf("\n");
+    printf("\n\n\n");
+    */
+	
+    /*
+    // translation test
+    printf("0: %D\n", pg_translate(0x0));
+    printf("4096: %D\n", pg_translate(4096));
+    printf("512*4096: %D\n", pg_translate(512*4096));
+    printf("300*512*4096: %D\n", pg_translate(300*512*4096));
+    printf("512*512*4096: %D\n", pg_translate(512*512*4096));
+    printf("512*512*4096-1: %D\n", pg_translate(512*512*4096-1));
+    */
 
-    printf("g%d m%d", 8, 8);
+    // map a page
+	VirtualAdress addr = 42U * 512U * 512U * 4096U; // 42th P3 entry
+    struct Page page = pg_containing_address(addr);
+    struct Frame frame;
+    printf("vadress: %l\n\n", addr);
+    fa_allocate_frame(&frame_allocator, &frame);
+    printf("None = %l, map to Frame %d\n", pg_translate(addr), frame.number);
+    pg_mag_page_to_frame(&page, &frame, 0, &frame_allocator);
+    printf("Some = %l\n", pg_translate(addr));
+    fa_allocate_frame(&frame_allocator, &frame);
+    printf("next free frame: %d\n", frame.number);
 
+    // print out what the mapped page contains
+    uint64_t *content = (uint64_t *) pg_start_address(&page);
+    printf("content: %l\n", *content);
+
+    pg_unmap(&page, &frame_allocator);
+    printf("None = %l\n", pg_translate(addr));
+
+    /*
+    // try print content at that adress (will PageFault since unmapped)
+    content = (uint64_t *) pg_start_address(&page);
+    printf("content: %l\n", *content);
+    */
+	
     for(;;) {}
 }
-
