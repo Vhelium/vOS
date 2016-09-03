@@ -5,6 +5,8 @@
 #include "../area_frame_allocator.h"
 #include "../../vlib.h"
 #include "../../vio.h"
+#include "../../multiboot2-elf64/multiboot2_elf64.h"
+#include "../../multiboot2-elf64/elf_sections.h"
 
 PhysicalAdress pg_translate(VirtualAdress virtual_address)
 {
@@ -17,6 +19,7 @@ PhysicalAdress pg_translate(VirtualAdress virtual_address)
         return -1; // invalid address
 }
 
+// returns the Page which contains the given VirtualAdress
 struct Page pg_containing_address(VirtualAdress address)
 {
     assert(address < 0x0000800000000000U || address >= 0xffff800000000000U);
@@ -30,6 +33,7 @@ uint64_t pg_start_address(struct Page *self)
     return self->number * PAGE_SIZE;
 }
 
+// initializes the physical `frame` corresponding to the provided page
 int pg_translate_page(struct Frame *frame, struct Page page)
 {
     struct Table *p3 = 0;
@@ -116,10 +120,10 @@ void pg_map(struct Page *page, PageEntryFlags flags,
 {
     struct Frame f;
     fa_allocate_frame(allocator, &f);
-    pg_mag_page_to_frame(page, &f, flags, allocator);
+    pg_map_page_to_frame(page, &f, flags, allocator);
 }
 
-void pg_mag_page_to_frame(struct Page *page, struct Frame *frame,
+void pg_map_page_to_frame(struct Page *page, struct Frame *frame,
         PageEntryFlags flags, struct AreaFrameAllocator *allocator)
 {
     struct Table *p3 = pg_next_table_create(P4_TABLE, pg_p4_index(page), allocator);
@@ -134,13 +138,21 @@ void pg_identity_map(struct Frame *frame, PageEntryFlags flags,
         struct AreaFrameAllocator *allocator)
 {
     struct Page page = pg_containing_address(frame_start_adress(frame));
-    pg_mag_page_to_frame(&page, frame, flags, allocator);
+    pg_map_page_to_frame(&page, frame, flags, allocator);
 
 }
 
 static void pg_tlb_flush(uint64_t addr)
 {
     asm volatile ("invlpg (%0)" : : "r"(addr) : "memory");
+}
+
+static void pg_tlb_flush_all()
+{
+    asm volatile (
+            "mov %%cr3,%%rax\n\t"
+            "mov %%rax,%%cr3"
+            : : : "memory");
 }
 
 void pg_unmap(struct Page *page, struct AreaFrameAllocator *allocator)
@@ -173,4 +185,165 @@ struct Table *pg_next_table_create(struct Table *self, tableindex index,
     }
 
     return pg_table_next_table(self, index);
+}
+
+struct InactivePageTable pg_inactive_pt_create(struct Frame *frame,
+        struct Page *tmp_page, struct AreaFrameAllocator *allocator)
+{
+    // check if sth is already mapped here:
+    struct Frame f;
+    assert(pg_translate_page(&f, *tmp_page) == 0);
+
+    // map temp page to page table frame in active table
+    pg_map_page_to_frame(tmp_page, frame, EF_WRITABLE, allocator);
+
+    // now it should be mapped
+    assert(pg_translate_page(&f, *tmp_page) != 0);
+
+    printf("next free frame: %d", allocator->next_free_frame.number);
+    printf("\n");
+
+    printf("frame: %d", f.number);
+    printf("\n");
+    //assert(0);
+
+    struct Table *table = (struct Table *)pg_start_address(tmp_page);
+    pg_table_set_zero(table);
+
+    pg_entry_set(&table->entries[511], frame, EF_PRESENT | EF_WRITABLE);
+
+    pg_unmap(tmp_page, allocator);
+
+    return (struct InactivePageTable) { *frame };
+}
+
+static uint64_t get_cr3_content()
+{
+    uint64_t content;
+    asm volatile ("mov %%cr3,%0"
+        : "=r" (content)
+        :
+        :);
+    return content;
+}
+
+static void set_cr3_content(uint64_t c)
+{
+    asm volatile ("mov %0,%%cr3"
+        :
+        : "r" (c)
+        :);
+}
+
+static struct InactivePageTable pg_switch_tables(struct InactivePageTable *new_table)
+{
+    struct Frame p4_frame = frame_containing_address(get_cr3_content());
+    struct InactivePageTable old_table = { p4_frame };
+
+    set_cr3_content((uint64_t)frame_start_adress(&new_table->p4_frame));
+
+    return old_table;
+}
+
+void pg_remap_kernel(struct AreaFrameAllocator *allocator, struct BootInformation *bi)
+{
+    // allocate active table
+    // TODO
+
+    struct Page tmp_page = { 0xdeadbeaf };
+    struct Frame tmp_frame;
+    // allocate frame for the new temporary page table
+    int e = fa_allocate_frame(allocator, &tmp_frame);
+    assert(e);
+
+    struct InactivePageTable new_table =
+        pg_inactive_pt_create(&tmp_frame, &tmp_page, allocator);
+
+    struct Frame backup = frame_containing_address(get_cr3_content());
+
+    // map tmp_page to current p4 table
+    struct Frame frame_c1 = { backup.number };
+    pg_map_page_to_frame(&tmp_page, &frame_c1, EF_WRITABLE, allocator);
+    struct Table *p4_table = (struct Table *)pg_start_address(&tmp_page);
+
+    // overwrite recursive mapping
+    struct Frame frame_c2 = { new_table.p4_frame.number };
+    pg_entry_set(&P4_TABLE->entries[511], &frame_c2, EF_PRESENT | EF_WRITABLE);
+    pg_tlb_flush_all();
+
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // >>>>>> do stuff in new context
+    
+    // identity map the allocated kernel sections
+    struct ElfSectionsTag *est = mb_get_elf_sections_tag(bi);
+    struct ElfSectionIter esIter = mb_get_elf_sections(est);
+
+    while(esIter.remaining_sections > 0) {
+        struct ElfSection *section = esIter.current_section;
+        if (!mb_section_is_allocated(section))
+        {
+            // section is not loaded to memory
+            continue;
+        }
+
+        assert(section->addr % PAGE_SIZE == 0);
+        printf("mapping section at addr: ");
+        printlonghex(section->addr);
+        printf(", size: ");
+        printlonghex(section->size);
+        printf("\n");
+
+        uint64_t flags = pg_from_elf_section_flags(section);
+
+        struct Frame start_frame =
+            frame_containing_address(section->addr);
+        struct Frame end_frame =
+            frame_containing_address(section->addr + section->size - 1);
+
+        struct FrameIter iter =
+            frame_range_inclusive_iter(start_frame, end_frame);
+        struct Frame f;
+        while (frame_range_inclusive_next(&iter, &f) != 0) {
+            pg_identity_map(&f, flags, allocator);
+        }
+
+        mb_get_next_elf_section(&esIter);
+    }
+    // identity map VGA text buffer
+    struct Frame vga_buffer_frame = frame_containing_address(0xb8000);
+    pg_identity_map(&vga_buffer_frame, EF_WRITABLE, allocator);
+    
+    // itendity map the multiboot info structure
+    struct Frame multiboot_start =
+        frame_containing_address((uint64_t)bi);
+    struct Frame multiboot_end =
+        frame_containing_address((uint64_t)bi + bi->total_size - 1);
+
+    struct FrameIter iter =
+        frame_range_inclusive_iter(multiboot_start, multiboot_end);
+    struct Frame f;
+    while (frame_range_inclusive_next(&iter, &f) != 0) {
+        pg_identity_map(&f, EF_PRESENT, allocator);
+    }
+    
+    // >>>>>> end context
+    // >>>>>>>>>>>>>>>>>>
+    
+    // restore recursive mapping to original p4 table
+    pg_entry_set(&p4_table->entries[511], &backup, EF_PRESENT | EF_WRITABLE);
+    pg_tlb_flush_all();
+
+    // unmap temporary page
+    pg_unmap(&tmp_page, allocator);
+
+    // switch in new table
+    struct InactivePageTable old_table = pg_switch_tables(&new_table);
+
+    printf("NEW TABLE ACTIVE!");
+
+    // set up guard page (below stack, such that overflow = page fault)
+    struct Page old_p4_page =
+        pg_containing_address(frame_start_adress(&old_table.p4_frame));
+    pg_unmap(&old_p4_page, allocator);
+    printf("guard page at %x", pg_start_address(&old_p4_page));
 }

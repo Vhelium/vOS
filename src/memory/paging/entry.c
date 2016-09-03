@@ -50,3 +50,18 @@ int pg_entry_pointed_frame(PageEntry *self, struct Frame *frame)
         return 0;
     }
 }
+
+PageEntryFlags pg_from_elf_section_flags(struct ElfSection *s)
+{
+    PageEntryFlags flags = 0;
+    if (mb_section_contains_flag(s, ELF_SECTION_ALLOCATED)) {
+        flags = flags | EF_PRESENT;
+    }
+    if (mb_section_contains_flag(s, ELF_SECTION_WRITABLE)) {
+        flags = flags | EF_WRITABLE;
+    }
+    if (!mb_section_contains_flag(s, ELF_SECTION_EXECUTABLE)) {
+        flags = flags | EF_NO_EXECUTE;
+    }
+    return flags;
+}

@@ -2,6 +2,7 @@
 #define ENTRY_H
 
 #include "../frame.h"
+#include "../../multiboot2-elf64/elf_sections.h"
 
 /* if Entry is == 0, the Entry counts as unused */
 
@@ -33,5 +34,7 @@ void pg_entry_set(PageEntry *self, struct Frame *frame, PageEntryFlags flags);
 /* returns 1 if a frame was found and written to `frame`
  * returns 0 if no such frame was found */
 int pg_entry_pointed_frame(PageEntry *self, struct Frame *frame);
+
+PageEntryFlags pg_from_elf_section_flags(struct ElfSection *s);
 
 #endif

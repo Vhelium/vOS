@@ -12,8 +12,19 @@ struct Frame {
     uint32_t number;
 };
 
+struct FrameIter {
+    struct Frame start;
+    struct Frame end;
+};
+
 struct Frame frame_containing_address(uint64_t address);
 
 PhysicalAdress frame_start_adress(struct Frame *self);
+
+struct FrameIter frame_range_inclusive_iter(struct Frame start, struct Frame end);
+
+/* returns 1 if next frame is written into `f`
+ * returns 0 if no next frame exists */
+int frame_range_inclusive_next(struct FrameIter *iter, struct Frame *f);
 
 #endif

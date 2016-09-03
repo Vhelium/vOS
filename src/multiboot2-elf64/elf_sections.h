@@ -31,6 +31,10 @@ struct ElfSectionIter {
     uint32_t entry_size;
 };
 
+extern const uint64_t ELF_SECTION_WRITABLE;
+extern const uint64_t ELF_SECTION_ALLOCATED;
+extern const uint64_t ELF_SECTION_EXECUTABLE;
+
 enum ElfSectionType {
 	Unused = 0,
     ProgramSection = 1,
@@ -51,5 +55,9 @@ struct ElfSectionIter mb_get_elf_sections(struct ElfSectionsTag *est);
 
 /* go to next item in Iterator `iter` */
 void mb_get_next_elf_section(struct ElfSectionIter *iter);
+
+int mb_section_contains_flag(struct ElfSection *s, uint64_t flag);
+
+int mb_section_is_allocated(struct ElfSection *s);
 
 #endif

@@ -6,10 +6,18 @@
 #include "table.h"
 #include "../area_frame_allocator.h"
 #include "../frame.h"
+#include "../../multiboot2-elf64/multiboot2_elf64.h"
 
 struct Page {
     uint32_t number;
 };
+
+struct InactivePageTable {
+    struct Frame p4_frame;
+};
+
+struct InactivePageTable pg_inactive_pt_create(struct Frame *frame,
+        struct Page *tmp_page, struct AreaFrameAllocator *allocator);
 
 PhysicalAdress pg_translate(VirtualAdress virtual_address);
 
@@ -28,7 +36,7 @@ uint32_t pg_p1_index(struct Page *page);
 void pg_map(struct Page *page, PageEntryFlags flags,
         struct AreaFrameAllocator *allocator);
 
-void pg_mag_page_to_frame(struct Page *page, struct Frame *frame,
+void pg_map_page_to_frame(struct Page *page, struct Frame *frame,
         PageEntryFlags flags, struct AreaFrameAllocator *allocator);
 
 void pg_identity_map(struct Frame *frame, PageEntryFlags flags,
@@ -38,5 +46,7 @@ void pg_unmap(struct Page *page, struct AreaFrameAllocator *allocator);
 
 struct Table *pg_next_table_create(struct Table *self, tableindex index,
         struct AreaFrameAllocator *allocator);
+
+void pg_remap_kernel(struct AreaFrameAllocator *allocator, struct BootInformation *bi);
 
 #endif
